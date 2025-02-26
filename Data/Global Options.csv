@@ -1,0 +1,6 @@
+Option,Value,Descritpion,Source
+Discount_rate_cost,0.035,Annual Discount Rate for costs,NICE methods guide. Available from: https://www.nice.org.uk/process/pmg36/chapter/economic-evaluation-2. Last Accessed 3rd December 2024
+Discount_rate_QALY,0.035,Annual Discount Rate for QALYs,NICE methods guide. Available from: https://www.nice.org.uk/process/pmg36/chapter/economic-evaluation-2. Last Accessed 3rd December 2024
+Number_of_patients,5000,Number of patients to run in the model,This model - stability analysis
+Run_PSA,FALSE,"Either TRUE or FALSE, if FALSE run a deterministic analysis",User Option
+Number_of_PSARuns,1000,The number of PSA runs to use,User Option
