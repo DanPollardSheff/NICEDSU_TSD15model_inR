@@ -1,4 +1,4 @@
-The code is licenced under an MIT licence, see the licence file for details. The data needed to run the model is provided as is. 
+The code is licenced under an MIT licence, see either licence file for details. The data needed to run the model is provided as is. 
 
 Data is located in the Data folder and contains .csv files. 
   Parameters.csv, contains model parameter information that has 2nd order uncertainty. The 1st row are headings, the 2nd row are mean values / median values. The 3rd row and down are different random samples from probability distributions. 
