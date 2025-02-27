@@ -41,7 +41,8 @@ source("R/Vert Fracture.R")
 source("R/Single Model Run.R")
 
 set.seed(123)
-
+##Deterministic
+start.time <- Sys.time()
 test <- Single_model_run(
   j_ = 1,
   parameter_ = Params,
@@ -51,5 +52,23 @@ test <- Single_model_run(
   ResultsVariables_ = ResultsVariables
                          )
 
-
+end.time <- Sys.time()
+##Print run time
+end.time - start.time
 test
+
+##PSA
+set.seed(123)
+start.time <- Sys.time()
+test_PSA <- sapply(1:10, #note this is bad practice for a real PSA, row 1 is deterministic! Here it is just so you can see that we are getting the same reuslts in sapply as running the function
+                   Single_model_run, #Function, but only the name
+                     parameter_ = Params, #Set each argument of the function to the right data
+                     pat_chars_ = pat_chars, #use the same notation as if we were running the function normally
+                     Treatment_ = Treatment,
+                     GlobalOptions_ = GlobalOptions,
+                     ResultsVariables_ = ResultsVariables
+                   )
+end.time <- Sys.time()
+##Print run time
+end.time - start.time
+test_PSA
