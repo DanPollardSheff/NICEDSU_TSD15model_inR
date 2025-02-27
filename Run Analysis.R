@@ -38,7 +38,10 @@ source("R/Standard Discounting.R")
 source("R/Deaths.R")
 source("R/Hip Fracture.R")
 source("R/Vert Fracture.R")
+source("R/Single Model Run.R")
 
+
+set.seed(123)
 ###### create a loop so the model can iterate across PSA runs, or run once if it is deterministic
 
 #Step 2: Select the Correct parameters for this model run
@@ -150,3 +153,25 @@ if(GlobalOptions["Run_PSA","Value"]==TRUE){
   Results[1,"Mean Time Hip"]               <- mean(pat_chars[,"Time_Hipfracture"])
 }
 
+###set the same seed, as for the script
+set.seed(123)
+##Reinitialise the pat_chars matrix, so you can see that I'm not pulling the old 
+##results
+#Set up a matrix with one row for each patient and the number of columns equal to the number of datapoints we are collecting
+pat_chars <- matrix(data = NA, nrow = as.numeric(GlobalOptions["Number_of_patients", "Value"]), 
+                    ncol = length(Individual_variables))
+
+##Assigning names to the pat_chars matrix
+colnames(pat_chars) <- Individual_variables
+
+test <- Single_model_run(
+  j_ = 1,
+  parameter_ = Params,
+  pat_chars_ = pat_chars,
+  Treatment_ = Treatment,
+  GlobalOptions_ = GlobalOptions,
+  ResultsVariables_ = ResultsVariables
+                         )
+
+Results
+test
