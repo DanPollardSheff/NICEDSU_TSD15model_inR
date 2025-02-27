@@ -1,3 +1,5 @@
+##load necessary libraries
+library(parallel)
 ####Read in data
 Params <- read.csv("Data/Parameters.csv")
 GlobalOptions <- read.csv("Data/Global Options.csv", row.names = 1)
@@ -40,27 +42,10 @@ source("R/Hip Fracture.R")
 source("R/Vert Fracture.R")
 source("R/Single Model Run.R")
 
-set.seed(123)
-##Deterministic
+##PSA - single thread
+set.seed(1)
 start.time <- Sys.time()
-test <- Single_model_run(
-  j_ = 1,
-  parameter_ = Params,
-  pat_chars_ = pat_chars,
-  Treatment_ = Treatment,
-  GlobalOptions_ = GlobalOptions,
-  ResultsVariables_ = ResultsVariables
-                         )
-
-end.time <- Sys.time()
-##Print run time
-end.time - start.time
-test
-
-##PSA
-set.seed(123)
-start.time <- Sys.time()
-test_PSA <- sapply(1:10, #note this is bad practice for a real PSA, row 1 is deterministic! Here it is just so you can see that we are getting the same reuslts in sapply as running the function
+test_PSA <- sapply(2:17, #note we now start on 2, as row 2 onwards as PSA samples! Here it is just so you can see that we are getting the same reuslts in sapply as running the function
                    Single_model_run, #Function, but only the name
                      parameter_ = Params, #Set each argument of the function to the right data
                      pat_chars_ = pat_chars, #use the same notation as if we were running the function normally
@@ -70,5 +55,45 @@ test_PSA <- sapply(1:10, #note this is bad practice for a real PSA, row 1 is det
                    )
 end.time <- Sys.time()
 ##Print run time
-end.time - start.time
+time_psa_singlethread <- end.time - start.time
+time_psa_singlethread
 test_PSA
+
+#PSA - parallel processing
+
+
+start.time <- Sys.time()
+#set up parrallel processing
+#these are the additional global variables that need to be set for parrallel
+#processing functions
+numCores <- detectCores()-1 #detect the number of cores on my current PC
+#set the number of cores to use to be the minimum of the number in the GlobalOptions.csv 
+#file or the number of detected cores on this PC. This is because the PC can crash if it 
+#runs out of memory from running too many models at once.
+numCores <- min (numCores, as.numeric(GlobalOptions["Number_of_cores", "Value"])) 
+
+##Next 3 lines of code set up clustering (technical thing needed for parallel processing)
+cl <- makeCluster(numCores)
+#Set a random number seed for parallel processing
+clusterEvalQ(cl, set.seed(1))
+
+#Set up the cluster processing and 
+#push all objects (data & user defined functions) in the global environment 
+#to all the clusters
+clusterExport(cl, ls(envir = .GlobalEnv))
+
+test_PSA_par <- parSapply(cl = cl, #tell the parSapply what my clusters are for parrallel processing
+                      2:17, #note we now start on 2, as row 2 onwards as PSA samples! Here it is just so you can see that we are getting the same reuslts in sapply as running the function
+                   Single_model_run, #Function, but only the name
+                   parameter_ = Params, #Set each argument of the function to the right data
+                   pat_chars_ = pat_chars, #use the same notation as if we were running the function normally
+                   Treatment_ = Treatment,
+                   GlobalOptions_ = GlobalOptions,
+                   ResultsVariables_ = ResultsVariables
+)
+end.time <- Sys.time()
+##Print run time
+time_psa_parallel <- end.time - start.time
+time_psa_parallel
+
+test_PSA_par
