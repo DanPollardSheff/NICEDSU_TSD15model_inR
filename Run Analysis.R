@@ -60,7 +60,7 @@ BC_control <- run_model(Params,
 write.csv(BC_control, "Results/BaseCaseResultsControlDet.csv")
 
 ##For real tests uncomment the next line of code - currently only doing 16 PSA runs
-#GlobalOptions["Number_of_PSARuns", "Value"] <- 1000
+GlobalOptions["Number_of_PSARuns", "Value"] <- 1000
 GlobalOptions["Run_PSA", "Value"] <- TRUE
 BC_intervention <- run_model(Params,
                              pat_chars,
