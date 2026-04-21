@@ -12,7 +12,7 @@
 #'
 #'@return Results
 
-Single_model_run_vec <- function(
+Single_model_run_vectorised <- function(
     j_,
     parameter_,
     pat_chars_,
@@ -69,15 +69,103 @@ Single_model_run_vec <- function(
   pat_chars_[,"Utility"]<- parameter_[,"BaselineUtility"]
   pat_chars_[,"Number of Vert Fractures"] <- 0
   
+  ##stash the event times (model code sets these to missing)
+  HipFractureTime <- pat_chars_[,"Time_Hipfracture"]
+  Vert1FractureTime <- pat_chars_[,"Time_1st_Vertfracture"]
+  Vert2FractureTime <- pat_chars_[,"Time_2nd_Vertfracture"]
+  DeathTime <- pat_chars_[,"Time_Death"]
+  
   ###Step 3: Run the model
-  #Set all events post-death to be missing
-  pat_chars_[,"Time_1st_Vertfracture"] <- ifelse(pat_chars_[,"Time_1st_Vertfracture"] > pat_chars_[,"Time_Death"], NA, pat_chars_[,"Time_1st_Vertfracture"])
-  pat_chars_[,"Time_2nd_Vertfracture"] <- ifelse(pat_chars_[,"Time_2nd_Vertfracture"] > pat_chars_[,"Time_Death"], NA, pat_chars_[,"Time_2nd_Vertfracture"])
-  pat_chars_[,"Time_Hipfracture"] <- ifelse(pat_chars_[,"Time_Hipfracture"] > pat_chars_[,"Time_Death"], NA, pat_chars_[,"Time_Hipfracture"])
-  
-  ###Sort out subgroups of patients
+  ###start counting events
+  current_time <- rep(0, length(pat_chars_[,"Utility"]))
   
   
+  ##Apply instantaenous death from hip fracture
+  #Give 0 prob to anyone who dies before their hip fracture
+  p_instantdeath <- ifelse(pat_chars_[,"Time_Hipfracture"] < pat_chars_[,"Time_Death"],
+                           parameter_[,"Mort_Prop_Hip"],
+                           0)
+  #Record deaths by comapring a uniform random number to the prob of instant death 
+  instantdeath <- runif(length(pat_chars_[,"Time_Hipfracture"] )) < p_instantdeath
+  
+  #Record the instant death
+  pat_chars_[instantdeath,"instanaeous_death_hip"] <- 1
+  #Change the time of death to be time of hip +  a very small number (I've approximated with 1/ 10 million)
+  pat_chars_[instantdeath, "Time_Death"] <- pat_chars_[instantdeath,"Time_Hipfracture"] + (1/10000000)
+  
+  ##Set all events post-death to be missing
+  ##For hip the inequality is less than or equals, as they can die instantly
+  pat_chars_[,"Time_Hipfracture"] <- ifelse(pat_chars_[,"Time_Hipfracture"] <= pat_chars_[,"Time_Death"], 
+                                            pat_chars_[,"Time_Hipfracture"],
+                                            NA)
+  
+  pat_chars_[,"Time_1st_Vertfracture"] <- ifelse(pat_chars_[,"Time_1st_Vertfracture"] < pat_chars_[,"Time_Death"], 
+                                                pat_chars_[,"Time_1st_Vertfracture"],
+                                                NA)
+  
+  pat_chars_[,"Time_2nd_Vertfracture"] <- ifelse(pat_chars_[,"Time_2nd_Vertfracture"] < pat_chars_[,"Time_Death"], 
+                                                pat_chars_[,"Time_2nd_Vertfracture"],
+                                                NA)
+  
+  
+  
+  #Extract the event times only
+  event_times <- pat_chars_[,c("Time_Hipfracture","Time_1st_Vertfracture", "Time_2nd_Vertfracture", "Time_Death")]
+  #Calculate the maximum number of events (for flexibility)
+  max_events <- ncol(event_times)
+  #create an alive vector, TRUE for everyone
+  alive <- pat_chars_[,"Time_Death"] >-1
+  
+ 
+  
+  for(event_step in 1:max_events) {
+    
+    # Identify who has the earliest event of each type
+    next_event_indices <- apply(event_times, 1, function(x) {
+      if (all(is.na(x))) {
+        return(4) # Assume death/no further events
+      } else {
+        return(which.min(x))
+      }
+    })
+    
+    next_event_times <- event_times[cbind((1:nrow(event_times)), next_event_indices)]
+    
+    #create logical vectors for each type of event
+    Hip   <- next_event_indices==1 & alive
+    Vert  <- (next_event_indices==2|next_event_indices==3) & alive 
+    Death <- next_event_indices==4 & alive 
+    
+    
+    #Apply code for based on the next event
+    pat_chars_[Hip,] <- HipFractureVec(pat_chars_,GlobalOptions_,parameter_,
+                                      Treatment_,current_time,next_event_times,
+                                      Hip)
+    
+    pat_chars_[Vert,] <- VertFractureVec(pat_chars_,GlobalOptions_,parameter_,
+                                         current_time,next_event_times,
+                                         Vert)
+    
+    pat_chars_[Death,] <- DeathVec(pat_chars_,GlobalOptions_,parameter_,
+                                   Treatment_,current_time,next_event_times,
+                                   Death)
+    
+    
+    #Reset current time to be current event
+    current_time[alive] <- next_event_times[alive]
+    
+    #Set current event to 100000000
+    event_times[cbind((1:nrow(event_times)), next_event_indices)][alive] <- NA
+    
+    #If alive and dead this event change vector to FALSE, otherwise leave it as it is
+    alive <- ifelse(Death,FALSE, alive)
+  }
+  
+  ##Reset time data - for results
+  pat_chars_[,"Time_Hipfracture"] <- HipFractureTime
+  pat_chars_[,"Time_1st_Vertfracture"] <- Vert1FractureTime
+  pat_chars_[,"Time_2nd_Vertfracture"] <- Vert2FractureTime
+  pat_chars_[,"Time_Death"] <- DeathTime
   
   
   ##Step 4 : Collect the results
@@ -86,8 +174,8 @@ Single_model_run_vec <- function(
     Results[1,"Discounted QALYs"]            <- mean(pat_chars_[,"Discounted QALYs"])
     Results[1,"Costs"]                       <- mean(pat_chars_[,"Costs"])
     Results[1,"Discounted Costs"]            <- mean(pat_chars_[,"Discounted Costs"])
-    Results[1,"Mean Time Vert"]              <- mean(pat_chars_[,"Time_1st_Vertfracture"])
-    Results[1,"Mean Time Hip"]               <- mean(pat_chars_[,"Time_Hipfracture"])
+    Results[1,"Mean Time Vert"]              <- mean(pat_chars_[,"Time_1st_Vertfracture"],na.rm=T)
+    Results[1,"Mean Time Hip"]               <- mean(pat_chars_[,"Time_Hipfracture"],na.rm=T)
   
   return(Results)
 }

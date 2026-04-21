@@ -18,7 +18,7 @@ colnames(pat_chars) <- Individual_variables
 
 ###
 ResultsVariables <- c("Life Expectancy", "Discounted Life Expectancy" ,"QALYs", 
-                      "Discounted QALYs", "Costs", "Discounted Costs", "Mean Time Vert", "Mean Time Hip")
+                 "Discounted QALYs", "Costs", "Discounted Costs", "Mean Time Vert", "Mean Time Hip")
 
 ####Step 1a: Set up a text variable to control whether we are using intervention or control
 Treatment <- "Baseline"
@@ -42,17 +42,16 @@ if(!dir.exists("Results")){
   dir.create("Results")
 }
 
-
 ##Base Case
 ##Intervention
-BC_intervention <- run_model(Params,
+BC_intervention <- run_model_vec(Params,
                              pat_chars,
                              "Intervention",
                              GlobalOptions,
                              ResultsVariables)
 
 write.csv(BC_intervention, "Results/BaseCaseResultsInterventionDet.csv")
-BC_control <- run_model(Params,
+BC_control <- run_model_vec(Params,
                         pat_chars,
                         "baseline",
                         GlobalOptions,
@@ -60,16 +59,16 @@ BC_control <- run_model(Params,
 write.csv(BC_control, "Results/BaseCaseResultsControlDet.csv")
 
 ##For real tests uncomment the next line of code - currently only doing 16 PSA runs
-#GlobalOptions["Number_of_PSARuns", "Value"] <- 1000
+GlobalOptions["Number_of_PSARuns", "Value"] <- 1000
 GlobalOptions["Run_PSA", "Value"] <- TRUE
-BC_intervention <- run_model(Params,
+BC_intervention <- run_model_vec(Params,
                              pat_chars,
                              "Intervention",
                              GlobalOptions,
                              ResultsVariables)
 
 write.csv(BC_intervention, "Results/BaseCaseResultsInterventionPSA.csv")
-BC_control <- run_model(Params,
+BC_control <- run_model_vec(Params,
                         pat_chars,
                         "baseline",
                         GlobalOptions,
@@ -81,7 +80,7 @@ write.csv(BC_control, "Results/BaseCaseResultsControlPSA.csv")
 GlobalOptions["Discount_rate_cost", "Value"] <- 0.015
 GlobalOptions["Discount_rate_QALY", "Value"] <- 0.015
 
-DR_1.5_intervention <- run_model(Params,
+DR_1.5_intervention <- run_model_vec(Params,
                              pat_chars,
                              "Intervention",
                              GlobalOptions,
@@ -89,12 +88,12 @@ DR_1.5_intervention <- run_model(Params,
 
 write.csv(DR_1.5_intervention, "Results/1.5percdiscInterventionPSA.csv")
 
-DR_1.5_control <- run_model(Params,
+DR_1.5_control <- run_model_vec(Params,
                         pat_chars,
                         "baseline",
                         GlobalOptions,
                         ResultsVariables)
 write.csv(DR_1.5_control, "Results/1.5percdiscResultsControlPSA.csv")
 EndTime <- Sys.time()
-LoopTime <- as.numeric(EndTime - StartTime, units = "secs")
-LoopTime
+VecTime <- as.numeric(EndTime - StartTime, units = "secs")
+VecTime
