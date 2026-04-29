@@ -1,16 +1,28 @@
+#'@description this function simulates patients with osteoarthitis's entire life courses for up to four events:
+#'Hip fracture, 1st Vert Fracture; 2nd Vert Fracture; Death. Including a 5% chance of immediate death upon the occurrence
+#'of hip fracture. It calculates cost and quality adjusted life year outcomes (both discounted and undiscounted). Calculates cohort
+#'mean effects as results.
+
 #'@param j_ is a counting variable, that indicates which row to use from the 
 #'parameters matrix. This controls which set of random variables to use in the analysis
-#'@param parameter_, is the full parameters matrix
-#'@param pat_chars_, is the patient characteristics matrix
+#'@param parameter_, is the full parameters matrix, this is sliced down to the appropriate row, by the j_ argument
+#'@param pat_chars_, is the patient characteristics matrix, which is passed down from the patient characteristics in the data folder
 #'@param Treatment_, is the variable that controls whether treatment effects are applied or not
 #'Intervention means the model is running an intervention arm. Anything else and intervention
 #'effects are not applied
 #'@param GlobalOptions_ is the data object containing all global options for the model
 #'e.g. discount rates, variables that control the number of patients, control variables 
 #'to determine if a scenario analysis is being conducted or not
-#'@param ResultsVariables_, is a list of all variables that I am collecting results for
+#'@param ResultsVariables_, is a character vector of the column names that I am collecting results for and will be 
+#'returned in the results matrix
+#'@return Results, 1xN matrix containing the aggregated results across the population for this model run
 #'
-#'@return Results
+#'@details The function performs the following steps:
+#'   1. Samples time-to-event for hip fractures, up to two vert fractures and death.
+#'   2. Applies intervention effects to event times if Treatment == "Intervention".
+#'   3. Iteratively identifies the earliest event for each patient and updates 
+#'      patient characteristics (Costs, QALYs, Utility) via helper functions.
+#'   4. Collates results into the output matrix.
 
 Single_model_run_vectorised <- function(
     j_,
