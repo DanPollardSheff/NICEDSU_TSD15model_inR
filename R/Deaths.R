@@ -1,13 +1,15 @@
 ####Death Code
-#'@param pat_chars_ is the patient charactersitics matrix
+#'@description this function calculates costs and QALYs between death and a patient's previous event. This function is vectorised so it applies to 
+#'to multiple patients at once. QALYs are calculated from patient's last event, as utility changes over time. Intervention costs are calculated from time of
+#' model entry as other events in the model do not effect the intervention costs
+#'@param pat_chars_ is the patient characteristics matrix from the simulation. The pat_chars_ matrix must contain columns: QALYs, Discounted QALYs, Costs, Discounted Costs, and Utility.
+#'@param GlobalOptions_, is the matrix with the Global Options from the data folder
 #'@param i_ is the current patient we are testing in the loop
 #'@param events_ is the ordered vector of events, with events after death set to missing
 #'@param y_ is the number of the current event
-#'@param GlobalOptions_, is the matrix with the Global Options
-#'@param parameter_ is the vector of model parameters for this model run
-#'@param Treatment_ is a text varaible indicating which arm to run
-#'@return pat_chars_ is the patient charactersitics matrix after we have done our calculations
-
+#'@param parameter_ is the single row of model parameters matrix for this model run [single row of parameters.csv in the data folder]
+#'@param Treatment_ is a text variable indicating which arm to run (either "Intervention" for intervention or anything else for control)
+#'@return pat_chars_ is the full patient characteristics matrix after we have done our calculations
 Death <- function (pat_chars_, i_, events_, y_, GlobalOptions_, parameter_,Treatment_){
   #Extract the time of the vert fracture
   time_death <- events_[y_]

@@ -6,11 +6,12 @@
 #'effects are not applied
 #'@param GlobalOptions_ is the data object containing all global options for the model
 #'e.g. discount rates, variables that control the number of patients, control variables 
-#'to determine if a scenario analysis is being conducted or not
+#'to determine if a scenario analysis is being conducted or not. 
+#'N.B. if you have memory problem try reducing either/or the Number_of_cores or  Number_of_patients options
+#'in Data/GlobalOptions.csv
 #'@param ResultsVariables_, is a list of all variables that I am collecting results for
 #'
 #'@return Results
-
 run_model <- function(parameter_,
                       pat_chars_,
                       Treatment_,
@@ -52,11 +53,11 @@ run_model <- function(parameter_,
     Results <- parSapply(cl = cl, #tell the parSapply what my clusters are for parrallel processing
                               PSAvector, #note we now start on 2, as row 2 onwards as PSA samples! Here it is just so you can see that we are getting the same reuslts in sapply as running the function
                               Single_model_run, #Function, but only the name
-                              parameter_ = Params, #Set each argument of the function to the right data
-                              pat_chars_ = pat_chars, #use the same notation as if we were running the function normally
-                              Treatment_ = Treatment,
-                              GlobalOptions_ = GlobalOptions,
-                              ResultsVariables_ = ResultsVariables)
+                              parameter_ = parameter_, #Set each argument of the function to the right data
+                              pat_chars_ = pat_chars_, #use the same notation as if we were running the function normally
+                              Treatment_ = Treatment_,
+                              GlobalOptions_ = GlobalOptions_,
+                              ResultsVariables_ = ResultsVariables_)
     
     stopCluster(cl=cl)
   }
