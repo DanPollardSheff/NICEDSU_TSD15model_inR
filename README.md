@@ -1,5 +1,5 @@
 # NICEDSU_TSD15model_inR
-This software is called NICEDSU_TSD15model_inR. It implements the discrete event simulation detailed in NICE DSU TSD 15 in R software. 
+This software is called NICEDSU_TSD15model_inR. It implements the discrete event simulation detailed in [NICE DSU TSD 15](https://sheffield.ac.uk/nice-dsu/tsds/patient-level-simulation) in R software. 
 
 # Licence
 The code is licenced under an **MIT licence**, see either licence file for details. The data needed to run the model is provided as is. 
